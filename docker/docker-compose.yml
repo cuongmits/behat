@@ -1,0 +1,36 @@
+version: '2.3'
+services:
+  nginx:
+    container_name: behat_nginx
+    build:
+      context: ./nginx #where to find the Dockerfile
+    volumes:
+      - ../src:/var/www
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf # general nginx conf file
+      - ./nginx/sites:/etc/nginx/sites-available # customer nginx conf file for all domains
+      - ./nginx/conf.d:/etc/nginx/conf.d # conf file which tells nginx where to find php-fpm
+    depends_on: # which service should be turned on first before current service
+      - php-fpm
+    ports:
+      - "88:80"
+      - "444:443"
+  php-fpm:
+    container_name: behat_php-fpm
+    build:
+      context: ./php-fpm
+    volumes:
+      - ../src:/var/www
+  database:
+    container_name: behat_database
+    build:
+      context: ./database
+    environment:
+      - MYSQL_DATABASE=mydb
+      - MYSQL_USER=myuser
+      - MYSQL_PASSWORD=secret
+      - MYSQL_ROOT_PASSWORD=docker
+    volumes:
+      - ./database/data.sql:/docker-entrypoint-initdb.d/data.sql
+    ports:
+      - "3307:3306"
+
